@@ -1,0 +1,92 @@
+import matplotlib.pyplot as plt
+
+# ---------- Forward Pass ----------
+def forward_pass(x, w1, w2):
+    h = x * w1
+    y_hat = h * w2
+    return h, y_hat
+
+# ---------- Verlustfunktion (MSE) ----------
+def mse_loss(y, y_hat):
+    return 0.5 * (y - y_hat)**2
+
+# ---------- Backpropagation (Gradienten) ----------
+def compute_gradients(x, w1, w2, y):
+    h, y_hat = forward_pass(x, w1, w2)
+
+    # Ableitungen mit der Kettenregel:
+    dL_dy_hat = y_hat - y
+    dL_dw2 = dL_dy_hat * h
+    dL_dw1 = dL_dy_hat * (x * w2)
+    return dL_dw1, dL_dw2
+
+# ---------- Trainingsschleife ----------
+def train_network(x, y, w1_init, w2_init, alpha=0.01, epochs=10):
+    w1, w2 = w1_init, w2_init
+    losses = []
+    y_hats = []
+
+    for i in range(epochs):
+        h, y_hat = forward_pass(x, w1, w2)
+        loss_val = mse_loss(y, y_hat)
+        losses.append(loss_val)
+        y_hats.append(y_hat)
+
+        dL_dw1, dL_dw2 = compute_gradients(x, w1, w2, y)
+
+        print(f"Iteration {i+1:2d}: "
+              f"w1 = {w1:7.3f}, w2 = {w2:7.3f}, "
+              f"y_hat = {y_hat:7.5f}, Loss = {loss_val:8.5f}")
+
+        # Parameterupdate (Gradient Descent)
+        w1 -= alpha * dL_dw1
+        w2 -= alpha * dL_dw2
+
+    return w1, w2, losses, y_hats
+
+# ---------- Plotfunktion ----------
+def plot_training(losses, y_hats, y_true):
+    epochs = len(losses)
+    fig, axs = plt.subplots(1, 2, figsize=(12, 4))
+
+    # Plot 1: Loss-Verlauf
+    axs[0].plot(range(epochs), losses, label="Loss")
+    axs[0].set_title("Verlauf der Loss-Funktion")
+    axs[0].set_xlabel("Iteration")
+    axs[0].set_ylabel("Loss")
+    axs[0].legend()
+
+    # Plot 2: Vorhersageverlauf
+    axs[1].plot(range(epochs), y_hats, label="y_hat")
+    axs[1].hlines(y_true, 0, epochs - 1, colors="r", linestyles="--", label="y (Zielwert)")
+    axs[1].set_title("Anpassung der Vorhersage")
+    axs[1].set_xlabel("Iteration")
+    axs[1].set_ylabel("y_hat")
+    axs[1].legend()
+
+    plt.tight_layout()
+    plt.show()
+
+# ---------- Ausführung ----------
+if __name__ == "__main__":
+    # Trainingsdaten
+    x = 2.0
+    y = 20.0
+
+    # Initialisierung der Gewichte
+    w1_init = 2.0
+    w2_init = 0.5
+
+    # Lernrate
+    alpha = 0.01
+
+    # Training starten
+    w1_final, w2_final, losses, y_hats = train_network(
+        x, y, w1_init, w2_init, alpha=alpha, epochs=20
+    )
+
+    print("Training abgeschlossen.")
+    print(f"Finale Gewichte: w1 = {w1_final:.4f}, w2 = {w2_final:.4f}")
+
+    # Ergebnisse plotten
+    plot_training(losses, y_hats, y)
